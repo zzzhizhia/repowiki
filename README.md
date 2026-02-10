@@ -1,6 +1,6 @@
 # RepoWiki
 
-> A Claude Code Skill for generating DeepWiki-style repository analysis reports.
+> An agent skill for generating DeepWiki-style repository analysis reports.
 
 RepoWiki deeply analyzes codebase architecture, module dependencies, and core systems, outputting structured documentation with Mermaid diagrams, source file references, and tables.
 
@@ -14,7 +14,7 @@ npx skills add zzzhizhia/repowiki
 
 ## Usage
 
-In a Claude Code session, use the slash command:
+In a coding agent session, use the slash command:
 
 ```
 /repowiki
