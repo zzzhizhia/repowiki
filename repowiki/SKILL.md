@@ -56,6 +56,31 @@ The generated report must strictly follow the layered structure below, output as
 {Mermaid graph showing interactions between major subsystems}
 ```
 
+### Layer 1.5: Concept & Design Philosophy
+
+Between the project overview and module analysis, add a section that explains the **core ideas and technical rationale** behind the project — not what it does, but why it was built this way.
+
+```markdown
+## Design Philosophy & Key Decisions
+
+### Core Concept
+{1-2 paragraphs explaining the fundamental insight or approach that drives the project's design.
+ What problem does the conventional approach have? What alternative mental model does this project adopt?}
+
+### Key Technical Decisions
+
+| Decision | Chose | Over | Rationale |
+|----------|-------|------|-----------|
+| {e.g., State management} | {Zustand} | {Redux, Context API} | {Why — specific trade-off reasoning} |
+| ... | ... | ... | ... |
+
+### Architecture Principles
+{2-4 bullet points capturing the non-obvious design principles extracted from the code.
+ Each should explain a constraint or convention the codebase follows, and WHY.}
+```
+
+This layer is critical for DeepWiki-quality reports: readers need to understand the **"why"** before diving into the **"what"**.
+
 ### Layer 2: Module & Package Analysis
 
 ```markdown
@@ -104,8 +129,12 @@ Generate an independent section for each core system:
 - `path/to/relevant/file.ts`
 </details>
 
-### Purpose & Scope
-{Description of the system's responsibilities}
+### Problem & Approach
+{Start each core system section with a narrative arc:
+ 1. What problem does this system solve?
+ 2. What is the conventional/naive approach, and why doesn't it work here?
+ 3. What insight or approach does this project use instead?
+ This "problem → conventional failure → project's solution" arc is critical for DeepWiki-quality analysis.}
 
 ### System Architecture
 {Mermaid graph: overall architecture diagram of the system}
@@ -119,11 +148,16 @@ Generate an independent section for each core system:
 |-----------|------|---------------|
 | ... | ... | ... |
 
+### Design Decisions & Trade-offs
+
+| Decision | Chose | Over | Rationale |
+|----------|-------|------|-----------|
+| ... | ... | ... | ... |
+
+{For each major design decision within this system, explain what was chosen over what alternatives, and why. This comparison table is required for every core system section.}
+
 ### Configuration & Extension Points
 {Code block: key configuration file snippets}
-
-### Design Decisions
-{Why it was designed this way, what trade-offs were made}
 ```
 
 ### Layer 4: Infrastructure & Toolchain
@@ -163,6 +197,11 @@ Generate an independent section for each core system:
 ```
 
 ## Mermaid Diagram Specifications
+
+**IMPORTANT: Mermaid syntax pitfalls to avoid:**
+- Do NOT use parentheses `()` inside node labels or edge labels — they break the parser. Use `（）` (fullwidth) or rephrase instead.
+- Do NOT use special characters `{}[]()` unescaped inside label strings. Wrap labels in `["..."]` if they contain special characters.
+- Always test that your diagram type declaration (graph, flowchart, sequenceDiagram, stateDiagram-v2) matches the syntax used in the body.
 
 Each report must include the following types of diagrams:
 
@@ -256,10 +295,11 @@ Determine core systems based on the following signals:
 For each core system, perform:
 
 1. Read all files in that directory
-2. Identify main class, function, and type definitions
+2. Identify main class, function, and type definitions — **include file:line references** (e.g., `src/engine.ts:42`) for key definitions so readers can navigate directly to the source
 3. Trace import/export dependency chains
 4. Identify design patterns (Repository, Factory, Observer, etc.)
 5. Extract key configurations and constants
+6. For critical algorithms or workflows, provide **step-by-step code logic analysis** — trace through the actual implementation, not just describe what it does at interface level
 
 ### Step 4: Generate Mermaid Diagrams
 
