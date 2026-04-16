@@ -1,4 +1,4 @@
-import { realpathSync, writeFileSync } from "node:fs";
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -19,8 +19,20 @@ Requirements:
   claude CLI must be installed and authenticated (https://claude.ai/code)
 `.trim();
 
-function printHelp(): void {
-  console.log(HELP);
+const ALLOWED_TOOLS = ["Write", "Read", "Bash", "Glob", "Grep"].join(",");
+
+const USER_MESSAGE =
+  "Analyze the current repository now and write the complete report to " +
+  "`REPOWIKI.md` in the current directory using the Write tool. " +
+  "Do not print the report to stdout.";
+
+function printBox(output: string): void {
+  const W = 60;
+  console.log(pc.dim("┌─ claude " + "─".repeat(W - 9) + "┐"));
+  for (const line of output.split("\n")) {
+    console.log(pc.dim("│ ") + line);
+  }
+  console.log(pc.dim("└" + "─".repeat(W) + "┘"));
 }
 
 function run(targetDir: string): void {
@@ -28,13 +40,18 @@ function run(targetDir: string): void {
 
   const result = spawnSync(
     "claude",
-    ["--model", "sonnet", "--effort", "medium", "--print"],
+    [
+      "--print",
+      "--model", "sonnet",
+      "--effort", "medium",
+      "--permission-mode", "dontAsk",
+      "--allowedTools", ALLOWED_TOOLS,
+      "--system-prompt", SKILL_PROMPT,
+    ],
     {
       cwd: targetDir,
-      encoding: "utf-8",
-      input: SKILL_PROMPT,
+      input: USER_MESSAGE,
       stdio: ["pipe", "pipe", "inherit"],
-      maxBuffer: 64 * 1024 * 1024, // 64 MB
     },
   );
 
@@ -52,27 +69,23 @@ function run(targetDir: string): void {
     process.exit(1);
   }
 
+  const output = (result.stdout?.toString() ?? "").trimEnd();
+  if (output) printBox(output);
+
   if (result.status !== 0) {
-    console.error(pc.red(`claude exited with code ${result.status}`));
+    console.error(pc.red(`claude exited with code ${result.status ?? 1}`));
     process.exit(result.status ?? 1);
   }
 
-  const output = result.stdout.trim();
-  if (!output) {
-    console.error(pc.red("claude returned empty output"));
-    process.exit(1);
-  }
-
   const outputPath = resolve(targetDir, "REPOWIKI.md");
-  writeFileSync(outputPath, output + "\n");
-  console.log(pc.green(`Report written to ${outputPath}`));
+  console.log(pc.green(`✓ Report written to ${outputPath}`));
 }
 
 function main(): void {
   const args = process.argv.slice(2);
 
   if (args[0] === "--help" || args[0] === "-h") {
-    printHelp();
+    console.log(HELP);
     return;
   }
 
