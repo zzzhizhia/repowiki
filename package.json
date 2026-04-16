@@ -1,0 +1,36 @@
+{
+  "name": "repowiki",
+  "version": "1.0.0",
+  "description": "CLI tool to generate DeepWiki-style repository analysis reports using Claude",
+  "type": "module",
+  "bin": {
+    "repowiki": "./dist/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "license": "MIT",
+  "author": "zzzhizhi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zzzhizhia/repowiki.git"
+  },
+  "homepage": "https://github.com/zzzhizhia/repowiki",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "picocolors": "^1.1.0"
+  }
+}

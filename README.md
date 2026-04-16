@@ -1,44 +1,59 @@
-# RepoWiki
+# repowiki
 
-> An agent skill for generating DeepWiki-style repository analysis reports.
+Generate a DeepWiki-style repository analysis report with a single command.
 
-RepoWiki deeply analyzes codebase architecture, module dependencies, and core systems, outputting structured documentation with Mermaid diagrams, source file references, and tables.
+## Quick Start
 
-## Installation
+```bash
+# one-off (no install required)
+npx repowiki
 
-Install via [skills.sh](https://skills.sh):
+# install globally
+npm install -g repowiki
+repowiki
+```
+
+## Usage
+
+```bash
+# analyze the current directory
+repowiki
+
+# analyze a specific repo
+repowiki /path/to/repo
+
+# show help
+repowiki --help
+```
+
+## Output
+
+Writes `REPOWIKI.md` to the target directory — a structured Markdown report with:
+
+- Project overview, tech stack table, and architecture diagrams
+- Module inventory and dependency graphs (Mermaid)
+- Deep analysis of core systems with sequence diagrams and design decision tables
+- Infrastructure: build, testing, CI/CD, and dependency management
+
+## Requirements
+
+- Node >= 20
+- [Claude Code CLI](https://claude.ai/code) installed and authenticated
+
+## How It Works
+
+`repowiki` calls `claude --model sonnet --effort medium --print` with a carefully crafted analysis prompt, then writes the response to `REPOWIKI.md`. The analysis runs entirely inside Claude Code's codebase-aware context, so no files are uploaded anywhere.
+
+## As a Claude Code Skill
+
+Install the underlying skill directly into your Claude Code agent:
 
 ```bash
 npx skills add zzzhizhia/repowiki
 ```
 
-## Usage
+Then trigger it with `/repowiki` or natural language like "generate repo report".
 
-In a coding agent session, use the slash command:
+## License
 
-```
-/repowiki
-```
-
-Or trigger with natural language:
-
-- `generate repo report`
-- `deepwiki`
-- `analyze this repo`
-- `generate project docs`
-- `repository report`
-- `codebase analysis`
-- `generate wiki`
-
-The report will be generated as `REPOWIKI.md` in the repository root.
-
-## Report Structure
-
-The generated report contains four layers:
-
-| Layer | Content | Elements |
-|-------|---------|----------|
-| Project Overview | Positioning, tech stack, repo structure | Tech stack table, architecture diagram |
-| Module Analysis | Module inventory, dependencies, internal architecture | Dependency graph, interface definitions |
-| Core Systems | Deep analysis of each subsystem | Sequence diagrams, state diagrams, component tables |
-| Infrastructure | Build, testing, CI/CD, dependency management | Flowcharts, configuration tables |
+MIT
