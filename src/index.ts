@@ -9,22 +9,17 @@ const HELP = `
 repowiki — Generate a DeepWiki-style repository analysis report
 
 Usage:
-  repowiki [path]      Analyze the repo at <path> (default: current directory)
-  repowiki --help      Show this help
+  repowiki [path] [-o OUTPUT]     Analyze the repo at <path> (default: .)
+  repowiki --help                 Show this help
 
-Output:
-  Writes REPOWIKI.md to the target directory.
+Options:
+  -o, --output PATH     Output file path (default: <path>/REPOWIKI.md)
 
 Requirements:
   claude CLI must be installed and authenticated (https://claude.ai/code)
 `.trim();
 
 const ALLOWED_TOOLS = ["Write", "Read", "Bash", "Glob", "Grep"].join(",");
-
-const USER_MESSAGE =
-  "Analyze the current repository now and write the complete report to " +
-  "`REPOWIKI.md` in the current directory using the Write tool. " +
-  "Do not print the report to stdout.";
 
 function printBox(output: string): void {
   const W = 60;
@@ -35,8 +30,12 @@ function printBox(output: string): void {
   console.log(pc.dim("└" + "─".repeat(W) + "┘"));
 }
 
-function run(targetDir: string): void {
-  console.log(pc.dim(`Analyzing ${targetDir} ...`));
+function run(targetDir: string, outputPath: string): void {
+  console.log(pc.dim(`Analyzing ${targetDir} → ${outputPath}`));
+
+  const userMessage =
+    `Analyze the current repository now and write the complete report to \`${outputPath}\` using the Write tool. ` +
+    `Do not print the report to stdout.`;
 
   const result = spawnSync(
     "claude",
@@ -50,7 +49,7 @@ function run(targetDir: string): void {
     ],
     {
       cwd: targetDir,
-      input: USER_MESSAGE,
+      input: userMessage,
       stdio: ["pipe", "pipe", "inherit"],
     },
   );
@@ -77,20 +76,53 @@ function run(targetDir: string): void {
     process.exit(result.status ?? 1);
   }
 
-  const outputPath = resolve(targetDir, "REPOWIKI.md");
   console.log(pc.green(`✓ Report written to ${outputPath}`));
 }
 
-function main(): void {
-  const args = process.argv.slice(2);
+type ParsedArgs = { help: boolean; targetDir: string; output: string };
 
-  if (args[0] === "--help" || args[0] === "-h") {
+function parseArgs(argv: string[]): ParsedArgs {
+  let help = false;
+  let explicitOutput: string | null = null;
+  const positional: string[] = [];
+
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--help" || a === "-h") {
+      help = true;
+    } else if (a === "-o" || a === "--output") {
+      const val = argv[++i];
+      if (val == null) {
+        console.error(pc.red(`${a} requires a value`));
+        process.exit(1);
+      }
+      explicitOutput = val;
+    } else if (a.startsWith("-")) {
+      console.error(pc.red(`Unknown flag: ${a}`));
+      process.exit(1);
+    } else {
+      positional.push(a);
+    }
+  }
+
+  const targetDir = resolve(positional[0] ?? ".");
+  const output =
+    explicitOutput != null
+      ? resolve(explicitOutput)
+      : resolve(targetDir, "REPOWIKI.md");
+
+  return { help, targetDir, output };
+}
+
+function main(): void {
+  const { help, targetDir, output } = parseArgs(process.argv.slice(2));
+
+  if (help) {
     console.log(HELP);
     return;
   }
 
-  const targetDir = resolve(args[0] ?? ".");
-  run(targetDir);
+  run(targetDir, output);
 }
 
 // Symlink-safe entry guard

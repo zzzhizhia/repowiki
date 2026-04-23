@@ -22,13 +22,24 @@ repowiki
 # analyze a specific repo
 repowiki /path/to/repo
 
+# custom output path
+repowiki -o wiki.md
+repowiki /path/to/repo -o ~/reports/wiki.md
+
 # show help
 repowiki --help
 ```
 
+## Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-o`, `--output PATH` | `<path>/REPOWIKI.md` | Output file path |
+| `-h`, `--help` | — | Show help |
+
 ## Output
 
-Writes `REPOWIKI.md` to the target directory — a structured Markdown report with:
+Writes a Markdown report to the output path (default `REPOWIKI.md` in the target directory) containing:
 
 - Project overview, tech stack table, and architecture diagrams
 - Module inventory and dependency graphs (Mermaid)
