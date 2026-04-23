@@ -1,9 +1,10 @@
-import { realpathSync } from "node:fs";
+import { existsSync, realpathSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import pc from "picocolors";
 import { SKILL_PROMPT } from "./skill.js";
+import { parseArgs } from "./args.js";
 
 const HELP = `
 repowiki — Generate a DeepWiki-style repository analysis report
@@ -14,6 +15,8 @@ Usage:
 
 Options:
   -o, --output PATH     Output file path (default: <path>/REPOWIKI.md)
+                        Relative paths resolve against the current directory,
+                        not <path>.
 
 Requirements:
   claude CLI must be installed and authenticated (https://claude.ai/code)
@@ -31,6 +34,11 @@ function printBox(output: string): void {
 }
 
 function run(targetDir: string, outputPath: string): void {
+  if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
+    console.error(pc.red(`Target is not a directory: ${targetDir}`));
+    process.exit(1);
+  }
+
   console.log(pc.dim(`Analyzing ${targetDir} → ${outputPath}`));
 
   const userMessage =
@@ -57,6 +65,8 @@ function run(targetDir: string, outputPath: string): void {
   if (result.error) {
     const err = result.error as NodeJS.ErrnoException;
     if (err.code === "ENOENT") {
+      // targetDir was pre-validated above, so ENOENT here means the claude
+      // binary is missing from PATH.
       console.error(
         pc.red(
           'claude CLI not found. Install it from https://claude.ai/code or run "npm install -g @anthropic-ai/claude-code".',
@@ -76,60 +86,46 @@ function run(targetDir: string, outputPath: string): void {
     process.exit(result.status ?? 1);
   }
 
+  if (!existsSync(outputPath)) {
+    console.error(
+      pc.red(
+        `claude exited successfully but ${outputPath} was not written. ` +
+          `The report was not generated.`,
+      ),
+    );
+    process.exit(1);
+  }
+
   console.log(pc.green(`✓ Report written to ${outputPath}`));
 }
 
-type ParsedArgs = { help: boolean; targetDir: string; output: string };
-
-function parseArgs(argv: string[]): ParsedArgs {
-  let help = false;
-  let explicitOutput: string | null = null;
-  const positional: string[] = [];
-
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === "--help" || a === "-h") {
-      help = true;
-    } else if (a === "-o" || a === "--output") {
-      const val = argv[++i];
-      if (val == null) {
-        console.error(pc.red(`${a} requires a value`));
-        process.exit(1);
-      }
-      explicitOutput = val;
-    } else if (a.startsWith("-")) {
-      console.error(pc.red(`Unknown flag: ${a}`));
-      process.exit(1);
-    } else {
-      positional.push(a);
-    }
+function main(): void {
+  let parsed;
+  try {
+    parsed = parseArgs(process.argv.slice(2), process.cwd());
+  } catch (err) {
+    console.error(pc.red((err as Error).message));
+    process.exit(2);
   }
 
-  const targetDir = resolve(positional[0] ?? ".");
-  const output =
-    explicitOutput != null
-      ? resolve(explicitOutput)
-      : resolve(targetDir, "REPOWIKI.md");
-
-  return { help, targetDir, output };
-}
-
-function main(): void {
-  const { help, targetDir, output } = parseArgs(process.argv.slice(2));
-
-  if (help) {
+  if (parsed.help) {
     console.log(HELP);
     return;
   }
 
-  run(targetDir, output);
+  run(parsed.targetDir, parsed.output);
 }
 
 // Symlink-safe entry guard
-const currentFile = fileURLToPath(import.meta.url);
-const isDirectRun =
-  process.argv[1] != null &&
-  resolve(realpathSync(process.argv[1])) === currentFile;
+let isDirectRun = false;
+try {
+  const currentFile = fileURLToPath(import.meta.url);
+  isDirectRun =
+    process.argv[1] != null &&
+    resolve(realpathSync(process.argv[1])) === currentFile;
+} catch {
+  // realpathSync may throw on unusual argv[1]; treat as non-direct run.
+}
 
 if (isDirectRun) {
   main();

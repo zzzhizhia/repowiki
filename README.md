@@ -34,7 +34,7 @@ repowiki --help
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-o`, `--output PATH` | `<path>/REPOWIKI.md` | Output file path |
+| `-o`, `--output PATH` | `<path>/REPOWIKI.md` | Output file path. Relative paths resolve against the current directory, not `<path>`. |
 | `-h`, `--help` | — | Show help |
 
 ## Output
