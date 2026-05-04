@@ -2,9 +2,12 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import pc from "picocolors";
+import chalk from "chalk";
 import { SKILL_PROMPT } from "./skill.js";
 import { parseArgs } from "./args.js";
+import { render } from "./markdown.js";
+
+declare const PKG_VERSION: string;
 
 const HELP = `
 repowiki — Generate a DeepWiki-style repository analysis report
@@ -17,6 +20,7 @@ Options:
   -o, --output PATH     Output file path (default: <path>/REPOWIKI.md)
                         Relative paths resolve against the current directory,
                         not <path>.
+  -v, --version         Show version number
 
 Requirements:
   claude CLI must be installed and authenticated (https://claude.ai/code)
@@ -24,22 +28,14 @@ Requirements:
 
 const ALLOWED_TOOLS = ["Write", "Read", "Bash", "Glob", "Grep"].join(",");
 
-function printBox(output: string): void {
-  const W = 60;
-  console.log(pc.dim("┌─ claude " + "─".repeat(W - 9) + "┐"));
-  for (const line of output.split("\n")) {
-    console.log(pc.dim("│ ") + line);
-  }
-  console.log(pc.dim("└" + "─".repeat(W) + "┘"));
-}
-
 function run(targetDir: string, outputPath: string): void {
   if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
-    console.error(pc.red(`Target is not a directory: ${targetDir}`));
+    console.error(chalk.red(`Target is not a directory: ${targetDir}`));
+    console.error(chalk.dim("Provide a path to an existing directory, or omit to use the current directory."));
     process.exit(1);
   }
 
-  console.log(pc.dim(`Analyzing ${targetDir} → ${outputPath}`));
+  console.log(chalk.dim(`Analyzing ${targetDir} → ${outputPath} (this may take a minute)`));
 
   const userMessage =
     `Analyze the current repository now and write the complete report to \`${outputPath}\` using the Write tool. ` +
@@ -68,27 +64,27 @@ function run(targetDir: string, outputPath: string): void {
       // targetDir was pre-validated above, so ENOENT here means the claude
       // binary is missing from PATH.
       console.error(
-        pc.red(
+        chalk.red(
           'claude CLI not found. Install it from https://claude.ai/code or run "npm install -g @anthropic-ai/claude-code".',
         ),
       );
     } else {
-      console.error(pc.red(`Failed to run claude: ${err.message}`));
+      console.error(chalk.red(`Failed to run claude: ${err.message}`));
     }
     process.exit(1);
   }
 
   const output = (result.stdout?.toString() ?? "").trimEnd();
-  if (output) printBox(output);
+  if (output) console.log(render(output).trimEnd() + "\n");
 
   if (result.status !== 0) {
-    console.error(pc.red(`claude exited with code ${result.status ?? 1}`));
+    console.error(chalk.red(`claude exited with code ${result.status ?? 1}`));
     process.exit(result.status ?? 1);
   }
 
   if (!existsSync(outputPath)) {
     console.error(
-      pc.red(
+      chalk.red(
         `claude exited successfully but ${outputPath} was not written. ` +
           `The report was not generated.`,
       ),
@@ -96,15 +92,23 @@ function run(targetDir: string, outputPath: string): void {
     process.exit(1);
   }
 
-  console.log(pc.green(`✓ Report written to ${outputPath}`));
+  console.log(chalk.green(`✓ Report written to ${outputPath}`));
 }
 
 function main(): void {
+  const argv = process.argv.slice(2);
+
+  if (argv.includes("--version") || argv.includes("-v")) {
+    console.log(PKG_VERSION);
+    return;
+  }
+
   let parsed;
   try {
-    parsed = parseArgs(process.argv.slice(2), process.cwd());
+    parsed = parseArgs(argv, process.cwd());
   } catch (err) {
-    console.error(pc.red((err as Error).message));
+    console.error(chalk.red((err as Error).message));
+    console.error(chalk.dim("Run 'repowiki --help' for usage information."));
     process.exit(2);
   }
 

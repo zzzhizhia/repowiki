@@ -37,14 +37,46 @@ repowiki --help
 | `-o`, `--output PATH` | `<path>/REPOWIKI.md` | Output file path. Relative paths resolve against the current directory, not `<path>`. |
 | `-h`, `--help` | — | Show help |
 
-## Output
+## Example Output
 
-Writes a Markdown report to the output path (default `REPOWIKI.md` in the target directory) containing:
+The generated `REPOWIKI.md` includes:
 
-- Project overview, tech stack table, and architecture diagrams
-- Module inventory and dependency graphs (Mermaid)
-- Deep analysis of core systems with sequence diagrams and design decision tables
-- Infrastructure: build, testing, CI/CD, and dependency management
+- **Project overview** -- positioning, tech stack table, and a repository structure Mermaid diagram
+- **Architecture** -- core system overview graph and module dependency map
+- **Module deep-dives** -- responsibility boundaries, internal architecture diagrams, key interface code blocks, and sequence diagrams for critical workflows
+- **Infrastructure** -- build pipeline flowchart, test strategy table, CI/CD diagram, and dependency management notes
+
+<details>
+<summary>Sample report structure (click to expand)</summary>
+
+```
+# RepoWiki: <project-name>
+
+## 1. Project Overview
+   - Positioning & description
+   - Tech stack table
+   - Repository structure (Mermaid graph TD)
+   - Core system overview (Mermaid graph LR)
+
+## 2. Design Philosophy
+   - Core principles
+   - Technical decision table
+
+## 3. Module Deep Analysis
+   ### 3.1 <module-name>
+   - Responsibility & boundaries
+   - Internal architecture (Mermaid graph TD)
+   - Key interfaces (code blocks)
+   - Workflow (Mermaid sequenceDiagram)
+
+## 4. Infrastructure
+   - Build pipeline (Mermaid flowchart LR)
+   - Test strategy table
+   - CI/CD pipeline (Mermaid flowchart TD)
+   - Dependency management
+```
+
+</details>
 
 ## Requirements
 
