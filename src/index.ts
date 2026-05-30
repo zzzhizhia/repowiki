@@ -45,6 +45,7 @@ function run(targetDir: string, outputPath: string): void {
     "claude",
     [
       "--print",
+      "--bare",
       "--model", "sonnet",
       "--effort", "medium",
       "--permission-mode", "dontAsk",
