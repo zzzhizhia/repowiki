@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0 (2026-05-31)
+
+- Pass `--bare` to claude by default, disabling skills/MCP/hooks for clean execution
+
 ## 1.2.0 (2026-05-05)
 
 - Add `-v`/`--version` flag
